@@ -16,7 +16,7 @@ test('t() translates, falls back to English and fills placeholders', () => {
   setLanguage('en');
   assert.equal(t('Jay-H {version}', { version: '1.2' }), 'Jay-H 1.2');
   setLanguage('pt-BR');
-  assert.equal(t('Versions, install and update arrive in stage {n}.', { n: 1 }), 'Versões, instalação e atualização chegam na etapa 1.');
+  assert.equal(t("Couldn't check: {error}", { error: 'GitHub 403' }), 'Não deu pra verificar: GitHub 403');
   assert.equal(t('a text nobody translated'), 'a text nobody translated');
   setLanguage('xx');
   assert.equal(t('Settings'), 'Settings');

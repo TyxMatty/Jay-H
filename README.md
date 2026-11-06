@@ -4,7 +4,7 @@
 
 The hub of the Jay line: every Jay app ([Jay-C](https://github.com/TyxMatty/JayC), [Jay-A](https://github.com/TyxMatty/Jay-A)) in one place, to install, update and open them. Windows first.
 
-Plan and stages: [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md) (in Portuguese). For now the app has its window (in Jay-C's Calm, Neon and Soft styles) and a card per product with a link to its repository. Versions, install and update come next.
+Plan and stages: [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md) (in Portuguese). For now the app has its window (in Jay-C's Calm, Neon and Soft styles) and a card per product with its installed version, the latest release on GitHub and a link to its repository. Install and update come next.
 
 ## Running
 
@@ -29,6 +29,8 @@ target-dir = "C:/Users/<you>/.cargo-target/jay-h"
 ```bash
 npm test
 ```
+
+To drive the real app (Rust commands included): start it with `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=--remote-debugging-port=9225`, then `node scripts/cdp-eval.mjs <file.js>` runs that file inside its page.
 
 ## License
 

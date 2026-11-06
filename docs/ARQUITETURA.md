@@ -18,6 +18,7 @@ flowchart LR
   RS -- "roda" --> APPS["Jay-C, Jay-A…"]
 ```
 
+- No navegador (`npm run web`), a página não lê o registro: o card diz "Só no app".
 - O **catálogo** (`frontend/src/core/products.js`) lista cada produto: nome, repositório no GitHub, nome do executável e descrição. Produto novo na linha = uma entrada nova ali.
 - **Versão instalada:** o instalador NSIS do Tauri (modo `currentUser`) grava `HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\<Produto>` com `DisplayVersion` e `InstallLocation`. Medido: o Jay-C 0.2.4 instalado aparece lá.
 - **Versão mais nova:** a release `latest` do repositório (`/repos/<repo>/releases/latest`). O instalador é o asset `*_x64-setup.exe`, e o GitHub informa o SHA-256 dele (`digest`). Jay-A ainda não tem release: o card diz isso.
@@ -50,6 +51,6 @@ Fora do escopo por enquanto (o usuário escolheu só o launcher): painel de repo
 | # | Etapa | Termina com |
 |---|---|---|
 | 0 | Scaffold: janela, estilos, tema, idioma, instância única, catálogo com os cards (nome, descrição, link do repositório) | `npm run web` mostra os cards nos 3 estilos; `npm test` passa ✅ |
-| 1 | Versões: instalada (registro) e mais nova (GitHub); status "Não instalado", "Atualizado", "Atualização: x.y.z", "Sem release ainda"; botão "Verificar de novo" | o card do Jay-C mostra 0.2.4 → 0.4.0 |
+| 1 | Versões: instalada (registro) e mais nova (GitHub); status "Não instalado", "Atualizado", "Atualização: x.y.z", "Sem release ainda"; botão "Verificar de novo" | o card do Jay-C mostra 0.2.4 → 0.4.0 ✅ (medido no app de dev) |
 | 2 | Instalar, atualizar e abrir: download com progresso, SHA-256, roda o instalador, depois relê a versão; botão "Abrir" | atualizar o Jay-C de uma conta de teste (não no Jay-C do usuário) |
 | 3 | Instalador do próprio Jay-H (NSIS) e o Jay-H no próprio catálogo, para se atualizar | instalar e atualizar o Jay-H numa conta de teste |

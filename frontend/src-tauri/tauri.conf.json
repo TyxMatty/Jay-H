@@ -27,7 +27,7 @@
         "script-src": "'self'",
         "style-src": "'self' 'unsafe-inline'",
         "img-src": "'self' data: blob:",
-        "connect-src": "'self' ipc: http://ipc.localhost",
+        "connect-src": "'self' ipc: http://ipc.localhost https://api.github.com",
         "font-src": "'self' data:"
       },
       "dangerousDisableAssetCspModification": [
