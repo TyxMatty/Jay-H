@@ -22,12 +22,12 @@ test('productStatus', () => {
 // The shape of Jay-C's v0.4.0 release (api.github.com, 2026-11-06), trimmed.
 const jayC = {
   tag_name: 'v0.4.0',
-  html_url: 'https://github.com/TyxMatty/JayC/releases/tag/v0.4.0',
+  html_url: 'https://github.com/TyxMatty/Jay-C/releases/tag/v0.4.0',
   assets: [
     {
       name: 'Jay-C_0.4.0_x64-setup.exe',
       size: 2302415,
-      browser_download_url: 'https://github.com/TyxMatty/JayC/releases/download/v0.4.0/Jay-C_0.4.0_x64-setup.exe',
+      browser_download_url: 'https://github.com/TyxMatty/Jay-C/releases/download/v0.4.0/Jay-C_0.4.0_x64-setup.exe',
       digest: 'sha256:848005e8a2f42200b36f5553fd144a9d8aefdcbddbbf1ad49b56c65f473d63de',
     },
   ],
@@ -50,6 +50,6 @@ test('parseRelease picks the version and the x64 installer', () => {
 test('fetchLatestRelease: 404 = no release, other errors throw', async () => {
   const reply = (status, body) => async () => ({ status, ok: status < 300, json: async () => body });
   assert.equal(await fetchLatestRelease('TyxMatty/Jay-A', reply(404)), null);
-  assert.equal((await fetchLatestRelease('TyxMatty/JayC', reply(200, jayC))).version, '0.4.0');
-  await assert.rejects(fetchLatestRelease('TyxMatty/JayC', reply(403)), /GitHub 403/);
+  assert.equal((await fetchLatestRelease('TyxMatty/Jay-C', reply(200, jayC))).version, '0.4.0');
+  await assert.rejects(fetchLatestRelease('TyxMatty/Jay-C', reply(403)), /GitHub 403/);
 });
