@@ -2,7 +2,7 @@
 // latest release on GitHub, and the buttons to install, update (products.rs) and open the app.
 import { h } from './dom.js';
 import { icons } from './icons.js';
-import { products } from '../core/products.js';
+import { products, SELF_ID } from '../core/products.js';
 import { fetchLatestRelease, productStatus } from '../core/releases.js';
 import { t } from '../core/i18n.js';
 
@@ -22,6 +22,7 @@ function externalLink(href, text) {
 
 /** { version, location } or null; undefined in the browser, which can't read the registry. */
 async function readInstalled(id) {
+  if (id === SELF_ID) return { version: __APP_VERSION__ };
   if (!isTauri) return undefined;
   const { invoke } = await import('@tauri-apps/api/core');
   return invoke('installed_app', { id });
@@ -85,7 +86,7 @@ function productCard(product) {
         bar.value = Math.round((p.done * 100) / p.total);
       } else {
         bar.hidden = true;
-        note.textContent = t('Checked. Finish in the installer window.');
+        note.textContent = product.id === SELF_ID ? t('Checked. Jay-H closes so its installer can update it.') : t('Checked. Finish in the installer window.');
       }
     };
     try {
@@ -130,7 +131,7 @@ function productCard(product) {
         installButton.textContent = status === 'update' ? t('Update to {version}', { version: latest.value.version }) : t('Install');
         installButton.hidden = false;
       }
-      openButton.hidden = !installed.value;
+      openButton.hidden = !installed.value || product.id === SELF_ID;
       openButton.className = installButton.hidden ? 'btn' : 'btn btn-secondary';
     }
     card.setAttribute('aria-busy', 'false');

@@ -15,6 +15,8 @@ npm install
 npm run dev
 ```
 
+`npm run build` gera o instalador do Windows (NSIS, por usuário, inglês e português) na pasta do target do Cargo, em `release/bundle/nsis/`.
+
 `npm run dev` abre a janela do Jay-H (Tauri) com recarga automática. Para abrir só a interface no navegador, sem Tauri: `npm run web` (porta 5176).
 
 Para o build do Rust ficar fora do OneDrive, crie um `.cargo/config.toml` (fora do git):

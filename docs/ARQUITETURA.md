@@ -24,6 +24,8 @@ flowchart LR
 - **Versão mais nova:** a release `latest` do repositório (`/repos/<repo>/releases/latest`). O instalador é o asset `*_x64-setup.exe`, e o GitHub informa o SHA-256 dele (`digest`). Jay-A ainda não tem release: o card diz isso.
 - **Instalar e atualizar** (`src-tauri/src/products.rs`): o Rust busca a release de novo (não confia na página), baixa o instalador numa pasta temporária nova, confere tamanho e SHA-256, roda o instalador com a janela dele (a pessoa termina lá), espera e apaga a pasta. Um de cada vez. O instalador do Jay-C já atualiza por cima de uma versão mais velha (template NSIS próprio dele).
 - **Abrir:** roda `<InstallLocation>\<exe>`.
+- **O próprio Jay-H** está no catálogo. A versão "instalada" dele é a que está rodando (`__APP_VERSION__`), e ele não tem "Abrir". Para se atualizar, o Rust baixa e confere o instalador como nos outros, abre o instalador e fecha o Jay-H, porque o instalador precisa trocar o `jay-h.exe` em uso. A pasta temporária desse instalador fica para a limpeza do Windows.
+- **Repositório privado:** a API pública do GitHub responde 404 para um repositório privado, então o Jay-H só acha a própria release quando `TyxMatty/Jay-H` for público (hoje é privado; o card diz "Sem release ainda").
 
 ## 2. Decisões técnicas
 
@@ -53,4 +55,4 @@ Fora do escopo por enquanto (o usuário escolheu só o launcher): painel de repo
 | 0 | Scaffold: janela, estilos, tema, idioma, instância única, catálogo com os cards (nome, descrição, link do repositório) | `npm run web` mostra os cards nos 3 estilos; `npm test` passa ✅ |
 | 1 | Versões: instalada (registro) e mais nova (GitHub); status "Não instalado", "Atualizado", "Atualização: x.y.z", "Sem release ainda"; botão "Verificar de novo" | o card do Jay-C mostra 0.2.4 → 0.4.0 ✅ (medido no app de dev) |
 | 2 | Instalar, atualizar e abrir: download com progresso, SHA-256, roda o instalador, depois relê a versão; botão "Abrir" | ✅ download e SHA-256 do instalador real do Jay-C 0.4.0 (`cargo test -- --ignored`), botões e erros no app de dev. **Falta:** rodar o instalador de verdade, numa conta de teste do Windows (não no Jay-C do usuário) |
-| 3 | Instalador do próprio Jay-H (NSIS) e o Jay-H no próprio catálogo, para se atualizar | instalar e atualizar o Jay-H numa conta de teste |
+| 3 | Instalador do próprio Jay-H (NSIS, inglês e português) e o Jay-H no próprio catálogo, para se atualizar | ✅ `npm run build` gera o instalador; o card do Jay-H mostra a versão em uso. **Falta:** publicar uma release (o repositório precisa ser público) e testar instalar e se atualizar numa conta de teste do Windows |

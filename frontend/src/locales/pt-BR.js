@@ -11,6 +11,7 @@ export default {
     "Chamadas e transmissão de tela: câmera, chat, lives com som e servidor próprio.",
   "Audio: microphone filters for Jay-C, a soundboard, an editor and format conversion.":
     "Áudio: filtros do microfone pro Jay-C, soundboard, editor e conversão de formatos.",
+  "This hub: it updates itself like the other apps.": "Este hub: ele se atualiza como os outros apps.",
   "Installed": "Instalado",
   "Latest": "Mais nova",
   "Only in the app": "Só no app",
@@ -26,6 +27,7 @@ export default {
   "Update to {version}": "Atualizar pra {version}",
   "Downloading…": "Baixando…",
   "Checked. Finish in the installer window.": "Conferido. Termine na janela do instalador.",
+  "Checked. Jay-H closes so its installer can update it.": "Conferido. O Jay-H fecha pro instalador poder atualizá-lo.",
   "Done.": "Pronto.",
   "The installer closed without finishing (code {code}).": "O instalador fechou sem terminar (código {code}).",
   "Couldn't install: {error}": "Não deu pra instalar: {error}",

@@ -14,6 +14,9 @@ use tauri::ipc::Channel;
 /// No Jay installer comes near this (Jay-C 0.4.0: 2.3 MB; Jay-A plans up to 20 MB).
 const MAX_INSTALLER: u64 = 200 * 1024 * 1024;
 
+/// Jay-H's own id in the catalog (core/products.js, SELF_ID).
+const SELF_ID: &str = "jay-h";
+
 #[derive(Deserialize)]
 struct Product {
     id: String,
@@ -198,7 +201,7 @@ impl Drop for Busy {
 /// Downloads, checks and runs the latest installer of the product. Returns the installer's exit code
 /// (0 = installed; NSIS uses 1 for cancelled).
 #[tauri::command]
-pub async fn install_app(id: String, on_progress: Channel<Progress>) -> Result<i32, String> {
+pub async fn install_app(app: tauri::AppHandle, id: String, on_progress: Channel<Progress>) -> Result<i32, String> {
     let busy = Busy::take()?;
     tauri::async_runtime::spawn_blocking(move || {
         let _busy = busy;
@@ -213,6 +216,14 @@ pub async fn install_app(id: String, on_progress: Channel<Progress>) -> Result<i
             }
         })?;
         let _ = on_progress.send(Progress::Installer);
+        // Jay-H can't wait for its own installer, which has to replace the running jay-h.exe.
+        if product.id == SELF_ID {
+            // shortcut: the temp folder stays (the installer runs from it); Windows' temp cleanup takes
+            // it. Delete it on the next start if it ever piles up.
+            Command::new(&path).spawn().map_err(|e| e.to_string())?;
+            app.exit(0);
+            return Ok(0);
+        }
         let status = Command::new(&path).status();
         if let Some(dir) = path.parent() {
             let _ = fs::remove_dir_all(dir);
@@ -252,6 +263,7 @@ mod tests {
             assert_eq!(products.iter().filter(|q| q.id == p.id).count(), 1, "duplicate {}", p.id);
         }
         assert!(product("nope").is_err());
+        assert!(product(SELF_ID).is_ok_and(|p| p.name == "Jay-H" && p.exe == "jay-h.exe"));
     }
 
     #[test]

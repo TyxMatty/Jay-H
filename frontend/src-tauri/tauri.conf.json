@@ -53,7 +53,12 @@
     ],
     "windows": {
       "nsis": {
-        "installMode": "currentUser"
+        "installMode": "currentUser",
+        "languages": [
+          "English",
+          "PortugueseBR"
+        ],
+        "displayLanguageSelector": true
       }
     }
   }
