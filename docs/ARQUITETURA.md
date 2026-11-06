@@ -1,6 +1,6 @@
 # Jay-H — Arquitetura
 
-O hub da linha Jay: um app só que reúne todos os produtos Jay (hoje o **Jay-C** e o **Jay-A**), mostra a versão instalada e a mais nova de cada um, instala, atualiza e abre. Windows primeiro, como os outros.
+O hub da linha Jay: um app só que reúne todos os produtos Jay (hoje o **Jay-C**, o **Jay-A**, o **Jay-E** e o próprio Jay-H), mostra a versão instalada e a mais nova de cada um, instala, atualiza e abre. Windows primeiro, como os outros.
 
 Escrito em 2026-11-06, a partir do Jay-A 0.1.0 e do Jay-C 0.4.0. Licença: **MIT**, como a linha toda.
 
@@ -25,7 +25,8 @@ flowchart LR
 - **Instalar e atualizar** (`src-tauri/src/products.rs`): o Rust busca a release de novo (não confia na página), baixa o instalador numa pasta temporária nova, confere tamanho e SHA-256, roda o instalador com a janela dele (a pessoa termina lá), espera e apaga a pasta. Um de cada vez. O instalador do Jay-C já atualiza por cima de uma versão mais velha (template NSIS próprio dele).
 - **Abrir:** roda `<InstallLocation>\<exe>`.
 - **O próprio Jay-H** está no catálogo. A versão "instalada" dele é a que está rodando (`__APP_VERSION__`), e ele não tem "Abrir". Para se atualizar, o Rust baixa e confere o instalador como nos outros, abre o instalador e fecha o Jay-H, porque o instalador precisa trocar o `jay-h.exe` em uso. A pasta temporária desse instalador fica para a limpeza do Windows.
-- **Repositório privado:** a API pública do GitHub responde 404 para um repositório privado, então o Jay-H só acha a própria release quando `TyxMatty/Jay-H` for público (hoje é privado; o card diz "Sem release ainda").
+- **Repositório público:** a API pública do GitHub responde 404 para um repositório privado, então todo produto do catálogo precisa de repositório público. O `TyxMatty/Jay-H` ficou público em 2026-11-06.
+- **CI** (`.github/workflows/`, como no Jay-C): `ci.yml` roda `npm test` (Ubuntu) e `cargo test` (Windows) a cada push no main e em pull requests. `installer.yml` gera o instalador numa tag `v*` (ou à mão pela aba Actions), confere se a tag é a versão do `tauri.conf.json` e guarda o `.exe` como artefato. Publicar a release continua manual: subir o `.exe` do artefato numa release com a mesma tag.
 
 ## 2. Decisões técnicas
 

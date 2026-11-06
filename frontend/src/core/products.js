@@ -8,6 +8,7 @@ import { t } from './i18n.js';
 const summaries = () => ({
   'jay-c': t('Calls and screen sharing: camera, chat, live streams with sound and your own server.'),
   'jay-a': t('Audio: microphone filters for Jay-C, a soundboard, an editor and format conversion.'),
+  'jay-e': t('Documents, images and video: read, edit and convert PDF, DOCX, LaTeX, Markdown and more.'),
   'jay-h': t('This hub: it updates itself like the other apps.'),
 });
 

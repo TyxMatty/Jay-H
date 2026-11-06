@@ -1,5 +1,6 @@
 [
   { "id": "jay-c", "name": "Jay-C", "repo": "TyxMatty/Jay-C", "exe": "jay-c.exe", "icon": "video" },
   { "id": "jay-a", "name": "Jay-A", "repo": "TyxMatty/Jay-A", "exe": "jay-a.exe", "icon": "waveform" },
+  { "id": "jay-e", "name": "Jay-E", "repo": "TyxMatty/Jay-E", "exe": "jay-e.exe", "icon": "document" },
   { "id": "jay-h", "name": "Jay-H", "repo": "TyxMatty/Jay-H", "exe": "jay-h.exe", "icon": "apps" }
 ]

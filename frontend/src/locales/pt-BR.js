@@ -11,6 +11,8 @@ export default {
     "Chamadas e transmissão de tela: câmera, chat, lives com som e servidor próprio.",
   "Audio: microphone filters for Jay-C, a soundboard, an editor and format conversion.":
     "Áudio: filtros do microfone pro Jay-C, soundboard, editor e conversão de formatos.",
+  "Documents, images and video: read, edit and convert PDF, DOCX, LaTeX, Markdown and more.":
+    "Documentos, imagens e vídeo: leia, edite e converta PDF, DOCX, LaTeX, Markdown e mais.",
   "This hub: it updates itself like the other apps.": "Este hub: ele se atualiza como os outros apps.",
   "Installed": "Instalado",
   "Latest": "Mais nova",

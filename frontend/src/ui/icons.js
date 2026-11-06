@@ -12,6 +12,8 @@ export const icons = {
   video: svg('<path d="M16 10l5-3v10l-5-3z"/><rect x="2" y="6" width="14" height="12" rx="2"/>'),
   /** Jay-A: a waveform (Jay-A's editor icon). */
   waveform: svg('<path d="M2 12h2M6 8v8M10 4v16M14 7v10M18 10v4M22 12h-2"/>'),
+  /** Jay-E: a page with a folded corner. */
+  document: svg('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/>'),
   /** A link that leaves the app. */
   external: svg('<path d="M15 3h6v6M10 14L21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>'),
 };

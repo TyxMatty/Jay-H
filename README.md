@@ -2,7 +2,7 @@
 
 **English** · [Português](README.pt-BR.md)
 
-The hub of the Jay line: every Jay app ([Jay-C](https://github.com/TyxMatty/Jay-C), [Jay-A](https://github.com/TyxMatty/Jay-A)) in one place, to install, update and open them. Windows first.
+The hub of the Jay line: every Jay app ([Jay-C](https://github.com/TyxMatty/Jay-C), [Jay-A](https://github.com/TyxMatty/Jay-A), [Jay-E](https://github.com/TyxMatty/Jay-E)) in one place, to install, update and open them. Windows first.
 
 Plan and stages: [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md) (in Portuguese). For now the app has its window (in Jay-C's Calm, Neon and Soft styles) and a card per product with its installed version, the latest release on GitHub, and buttons to install, update and open it.
 
