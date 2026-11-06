@@ -1,0 +1,60 @@
+{
+  "$schema": "../../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "Jay-H",
+  "version": "0.1.0",
+  "identifier": "io.github.tyxmatty.jayh",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:5176",
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "Jay-H",
+        "width": 880,
+        "height": 600,
+        "minWidth": 360,
+        "minHeight": 480,
+        "resizable": true
+      }
+    ],
+    "security": {
+      "csp": {
+        "default-src": "'self'",
+        "script-src": "'self'",
+        "style-src": "'self' 'unsafe-inline'",
+        "img-src": "'self' data: blob:",
+        "connect-src": "'self' ipc: http://ipc.localhost",
+        "font-src": "'self' data:"
+      },
+      "dangerousDisableAssetCspModification": [
+        "style-src"
+      ]
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "nsis"
+    ],
+    "publisher": "TyxMatty",
+    "copyright": "© 2026 TyxMatty. MIT License.",
+    "category": "Utility",
+    "shortDescription": "The hub of the Jay line: every Jay app in one place",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser"
+      }
+    }
+  }
+}
