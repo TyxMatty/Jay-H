@@ -38,11 +38,16 @@ pub fn set_taskbar_icon(window: tauri::WebviewWindow, rgba: Vec<u8>, size: u32) 
         return Err(format!("expected {size}x{size} RGBA pixels, got {} bytes", rgba.len()));
     }
     let hwnd = HWND(window.hwnd().map_err(|e| e.to_string())?.0);
-    // Named after its content, so a changed picture is never served from an icon cache.
+    // Named after its content, so a changed picture is never served from an icon cache. Dev and
+    // release get different names: Explorer remembers a path it once failed to load (a dev build run
+    // from a sandboxed shell writes where Explorer can't see), and the installed app must not inherit
+    // that blank. The base name also changed from "taskbar-", whose paths may already be remembered
+    // blank on the user's PC (measured in Jay-A, which does the same).
+    let kind = if cfg!(debug_assertions) { "dev" } else { "app" };
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     rgba.hash(&mut hasher);
     let dir = window.app_handle().path().app_local_data_dir().map_err(|e| e.to_string())?;
-    let ico_path = dir.join(format!("taskbar-{:016x}.ico", hasher.finish()));
+    let ico_path = dir.join(format!("window-icon-{kind}-{:016x}.ico", hasher.finish()));
     if !ico_path.exists() {
         std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
         std::fs::write(&ico_path, ico(&rgba, size)).map_err(|e| e.to_string())?;
