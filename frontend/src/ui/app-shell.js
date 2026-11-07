@@ -1,7 +1,7 @@
-// The window: top bar, then the sections (Products, Settings) as tabs.
+// The window, laid out like Jay-C's: a top bar (brand, status pill, theme, settings) over the
+// products. Settings opens in a <dialog>, like Jay-C's settings modal.
 import { h } from './dom.js';
 import { icons } from './icons.js';
-import { createTabs } from './tabs.js';
 import { createProductsPanel } from './products.js';
 import { toggleTheme, currentTheme } from './theme.js';
 import { settings } from '../store/settings.js';
@@ -83,52 +83,83 @@ function createSettingsPanel() {
     LANGUAGES.map(([value, name]) => h('option', { value, selected: settings.get().language === value }, name ?? t('System'))),
   );
 
-  return h(
-    'section',
-    { class: 'app-panel' },
-    h('h1', {}, t('Settings')),
+  const closeButton = h('button', { type: 'button', class: 'icon-btn', 'aria-label': t('Close'), title: t('Close'), html: icons.close });
+  const dialog = h(
+    'dialog',
+    { class: 'modal', 'aria-labelledby': 'settings-title' },
+    h('div', { class: 'modal-header' }, h('h2', { id: 'settings-title' }, t('Settings')), closeButton),
     h(
-      'fieldset',
-      {},
-      h('h3', {}, t('Appearance')),
-      h('div', { class: 'field' }, h('span', { class: 'field-label', id: 'style-label' }, t('Style')), styleGroup),
-      h('div', { class: 'field' }, h('span', { class: 'field-label', id: 'theme-label' }, t('Theme')), themeGroup),
+      'div',
+      { class: 'modal-body' },
       h(
-        'div',
-        { class: 'field' },
-        h('label', { for: 'settings-language' }, t('Language')),
-        languageSelect,
-        h('p', { class: 'hint', id: 'language-hint' }, t('Jay-H reloads to change the language.')),
+        'fieldset',
+        {},
+        h('h3', {}, t('Appearance')),
+        h('div', { class: 'field' }, h('span', { class: 'field-label', id: 'style-label' }, t('Style')), styleGroup),
+        h('div', { class: 'field' }, h('span', { class: 'field-label', id: 'theme-label' }, t('Theme')), themeGroup),
+        h(
+          'div',
+          { class: 'field' },
+          h('label', { for: 'settings-language' }, t('Language')),
+          languageSelect,
+          h('p', { class: 'hint', id: 'language-hint' }, t('Jay-H reloads to change the language.')),
+        ),
       ),
-    ),
-    h(
-      'fieldset',
-      {},
-      h('h3', {}, t('About')),
       h(
-        'div',
-        { class: 'field' },
-        h('p', { class: 'hint' }, t('Jay-H {version}', { version: __APP_VERSION__ })),
-        h('p', { class: 'hint' }, t('The hub of the Jay line: every Jay app in one place.')),
+        'fieldset',
+        {},
+        h('h3', {}, t('About')),
+        h(
+          'div',
+          { class: 'field' },
+          h('p', { class: 'hint' }, t('Jay-H {version}', { version: __APP_VERSION__ })),
+          h('p', { class: 'hint' }, t('The hub of the Jay line: every Jay app in one place.')),
+        ),
       ),
     ),
   );
+  closeButton.addEventListener('click', () => dialog.close());
+  // A click on the backdrop (outside the box) closes it too.
+  dialog.addEventListener('click', (e) => e.target === dialog && dialog.close());
+  return dialog;
 }
 
-const tabLabel = (icon, text) => h('span', { class: 'tab-label' }, h('span', { class: 'tab-icon', html: icon }), text);
+/** Jay-C's server pill, here for the products: what the last check found. Clicking it checks again. */
+function createStatusPill() {
+  const pill = h('button', { type: 'button', class: 'status-pill', 'data-state': 'checking' }, t('Checking…'));
+  const TEXT = {
+    checking: () => t('Checking…'),
+    updates: (n) => (n === 1 ? t('1 update') : t('{n} updates', { n })),
+    online: () => t('All up to date'),
+    reachable: () => t('GitHub online'),
+    offline: () => t("Couldn't reach GitHub"),
+  };
+  return {
+    pill,
+    /** @param {{ state: 'checking' | 'updates' | 'online' | 'reachable' | 'offline', updates: number }} summary */
+    show({ state, updates }) {
+      pill.dataset.state = state;
+      pill.textContent = TEXT[state](updates);
+    },
+  };
+}
 
 export function mountApp(root) {
-  const items = [
-    { key: 'products', label: tabLabel(icons.apps, t('Products')), panel: createProductsPanel() },
-    { key: 'settings', label: tabLabel(icons.settings, t('Settings')), panel: createSettingsPanel() },
-  ];
-  const tabs = createTabs({ idPrefix: 'section', label: t('Sections'), className: 'app-nav', vertical: true, items });
+  const status = createStatusPill();
+  const panel = createProductsPanel({ onSummary: status.show });
+  status.pill.addEventListener('click', panel.checkAll);
+
+  const settingsDialog = createSettingsPanel();
+  const settingsButton = h('button', { type: 'button', class: 'icon-btn', 'aria-label': t('Settings'), title: t('Settings'), html: icons.settings });
+  settingsButton.addEventListener('click', () => settingsDialog.showModal());
 
   const header = h(
     'header',
     { class: 'topbar' },
     h('div', { class: 'brand' }, h('span', { class: 'brand-mark wolf-mark', 'aria-hidden': 'true' }), h('span', { class: 'brand-name' }, 'Jay', h('span', {}, '-'), 'H')),
+    status.pill,
     createThemeToggle(),
+    settingsButton,
   );
 
   // A new language applies on a fresh page.
@@ -136,6 +167,5 @@ export function mountApp(root) {
     if (next.language !== prev.language) location.reload();
   });
 
-  root.replaceChildren(header, h('div', { class: 'app-body' }, tabs.list, h('div', { class: 'app-panels' }, items.map((i) => i.panel))));
-  tabs.select('products');
+  root.replaceChildren(header, h('main', { class: 'app-main' }, panel.element, h('p', { class: 'app-version' }, t('Jay-H {version}', { version: __APP_VERSION__ }))), settingsDialog);
 }

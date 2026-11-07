@@ -73,7 +73,7 @@ function productCard(product) {
     });
   });
 
-  installButton.addEventListener('click', async () => {
+  async function install() {
     const { invoke, Channel } = await import('@tauri-apps/api/core');
     installButton.disabled = openButton.disabled = true;
     error.hidden = true;
@@ -100,8 +100,10 @@ function productCard(product) {
     bar.hidden = true;
     installButton.disabled = openButton.disabled = false;
     await check();
-  });
+  }
+  installButton.addEventListener('click', install);
 
+  /** Reads both versions and updates the card. Returns its status (productStatus), 'error' or 'unknown' (browser). */
   async function check() {
     card.setAttribute('aria-busy', 'true');
     installedValue.textContent = latestValue.textContent = '…';
@@ -116,11 +118,13 @@ function productCard(product) {
     else latestValue.textContent = latest.value?.version ?? t('No release yet');
 
     const problem = installed.reason ?? latest.reason;
+    let status = 'unknown';
     if (problem) {
+      status = 'error';
       error.textContent = t("Couldn't check: {error}", { error: errorText(problem) });
       error.hidden = false;
     } else if (installed.value !== undefined) {
-      const status = productStatus(installed.value, latest.value);
+      status = productStatus(installed.value, latest.value);
       if (BADGES[status]) {
         badge.textContent = BADGES[status]();
         badge.dataset.status = status;
@@ -128,33 +132,65 @@ function productCard(product) {
       }
       // Without an installer on GitHub there is nothing to install (Rust checks again before downloading).
       if (latest.value?.installer && (status === 'not-installed' || status === 'update')) {
-        installButton.textContent = status === 'update' ? t('Update to {version}', { version: latest.value.version }) : t('Install');
+        const text = status === 'update' ? t('Update to {version}', { version: latest.value.version }) : t('Install');
+        installButton.replaceChildren(h('span', { class: 'btn-icon', html: icons.download }), text);
         installButton.hidden = false;
       }
       openButton.hidden = !installed.value || product.id === SELF_ID;
       openButton.className = installButton.hidden ? 'btn' : 'btn btn-secondary';
     }
     card.setAttribute('aria-busy', 'false');
+    return status;
   }
 
-  return { card, check };
+  return { id: product.id, card, check, install };
 }
 
-export function createProductsPanel() {
+/**
+ * The products: a header (Jay-C's lobby hero, smaller) over one card per app.
+ * @param {{ onSummary: (s: { state: 'checking' | 'updates' | 'online' | 'reachable' | 'offline', updates: number }) => void }} options
+ */
+export function createProductsPanel({ onSummary }) {
   const cards = products().map(productCard);
-  const button = h('button', { type: 'button', class: 'btn btn-secondary' }, t('Check again'));
+  const subtitle = h('p', {}, t('Install, update and open every Jay app from here.'));
+  const checkButton = h('button', { type: 'button', class: 'btn btn-secondary' }, t('Check again'));
+  const updateAllButton = h('button', { type: 'button', class: 'btn', hidden: true }, h('span', { class: 'btn-icon', html: icons.download }), t('Update all'));
+  let pending = []; // the cards with an update, from the last check
+
   const checkAll = async () => {
-    button.disabled = true;
-    await Promise.all(cards.map((c) => c.check()));
-    button.disabled = false;
+    checkButton.disabled = true;
+    updateAllButton.hidden = true;
+    onSummary({ state: 'checking', updates: 0 });
+    const statuses = await Promise.all(cards.map((c) => c.check()));
+    pending = cards.filter((_, i) => statuses[i] === 'update');
+    updateAllButton.hidden = pending.length < 2; // one update: its own card's button is enough
+    checkButton.disabled = false;
+    // 'unknown' = in a browser, which can't see what's installed: GitHub answered, nothing more to say.
+    const state = statuses.includes('error') ? 'offline' : pending.length ? 'updates' : statuses.includes('unknown') ? 'reachable' : 'online';
+    onSummary({ state, updates: pending.length });
   };
-  button.addEventListener('click', checkAll);
+
+  updateAllButton.addEventListener('click', async () => {
+    updateAllButton.disabled = checkButton.disabled = true;
+    // One installer at a time (products.rs refuses two); Jay-H last, since updating it closes the hub.
+    for (const card of [...pending].sort((a, b) => (a.id === SELF_ID) - (b.id === SELF_ID))) await card.install();
+    updateAllButton.disabled = false;
+    await checkAll();
+  });
+  checkButton.addEventListener('click', checkAll);
   checkAll();
 
-  return h(
+  const element = h(
     'section',
-    { class: 'app-panel' },
-    h('div', { class: 'panel-head' }, h('h1', {}, t('Products')), button),
-    h('div', { class: 'product-grid' }, cards.map((c) => c.card)),
+    { class: 'products' },
+    h(
+      'div',
+      { class: 'products-hero' },
+      h('span', { class: 'products-hero-mark wolf-mark', 'aria-hidden': 'true' }),
+      h('div', { class: 'products-hero-text' }, h('h1', {}, t('Every Jay app in one place')), subtitle),
+      h('div', { class: 'products-hero-actions' }, updateAllButton, checkButton),
+    ),
+    h('div', { class: 'product-grid', role: 'list', 'aria-label': t('Products') }, cards.map((c) => (c.card.setAttribute('role', 'listitem'), c.card))),
   );
+  return { element, checkAll };
 }

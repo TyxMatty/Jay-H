@@ -433,157 +433,187 @@ fieldset > h3 {
   color: var(--text-muted);
 }
 
-.app-body {
+/* ---------- Jay-H shell (laid out like Jay-C: top bar over one scrolling page) ---------- */
+
+.topbar .status-pill {
+  margin-left: auto;
+}
+
+.brand {
+  margin-right: 0;
+}
+
+.app-main {
+  position: relative;
   flex: 1;
   min-height: 0;
-  display: grid;
-  grid-template-columns: 180px minmax(0, 1fr);
-  padding: 0;
-  overflow: hidden;
-}
-
-.app-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 12px;
-  border-right: 1px solid var(--border);
+  padding: 24px clamp(16px, 3vw, 32px) 16px;
   overflow-y: auto;
+  isolation: isolate;
 }
 
-.app-nav [role='tab'] {
-  position: relative;
-  padding: 9px 12px;
-  border: 0;
-  border-radius: var(--radius-sm);
-  background: transparent;
+/* Jay-C's lobby glow: two soft lights in the accent color behind the page. */
+.app-main::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(40% 50% at 20% 25%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 70%),
+    radial-gradient(35% 45% at 80% 80%, color-mix(in srgb, var(--accent-2, var(--accent)) 9%, transparent), transparent 70%);
+  pointer-events: none;
+}
+
+.app-version {
+  margin: 20px 0 0;
+  font-size: 12px;
   color: var(--text-muted);
-  font: inherit;
-  font-weight: 600;
-  text-align: left;
-  cursor: pointer;
-  transition: background-color var(--dur-fast), color var(--dur-fast);
 }
 
-.tab-label {
+/* ---------- Status pill (Jay-C's server pill) ---------- */
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius-control) + 4px);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.status-pill::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+
+.status-pill[data-state='online']::before,
+.status-pill[data-state='reachable']::before {
+  background: var(--success);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--success) 25%, transparent);
+}
+
+.status-pill[data-state='updates']::before {
+  background: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.status-pill[data-state='offline']::before {
+  background: var(--danger);
+}
+
+.status-pill[data-state='checking']::before {
+  background: var(--warning);
+}
+
+/* ---------- Settings modal (Jay-C's <dialog>) ---------- */
+
+.modal {
+  width: min(480px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow);
+}
+
+.modal::backdrop {
+  background: var(--backdrop);
+}
+
+.modal-header {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
 }
 
-.tab-icon {
-  display: inline-grid;
+.modal-header h2 {
+  margin: 0;
+  font-size: 18px;
 }
 
-.tab-icon svg {
-  width: 18px;
-  height: 18px;
-}
-
-.app-nav [role='tab']:hover {
-  background: var(--surface-2);
-  color: var(--text);
-}
-
-.app-nav [role='tab'][aria-selected='true'] {
-  background: var(--accent-soft);
-  color: var(--text);
-}
-
-.app-nav [role='tab'][aria-selected='true'] .tab-icon {
-  color: var(--accent-text, var(--accent));
-}
-
-/* A small bar on the chosen tab's edge. */
-.app-nav [role='tab'][aria-selected='true']::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 9px;
-  bottom: 9px;
-  width: 3px;
-  border-radius: 3px;
-  background: var(--accent);
-}
-
-.app-nav [role='tab']:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: -2px;
-}
-
-.app-panels {
-  min-height: 0;
+.modal-body {
   padding: 20px;
   overflow-y: auto;
-  background: color-mix(in srgb, var(--surface-2) 40%, var(--surface));
 }
 
-/* Each section is a card over the panel's background. */
-.app-panel > fieldset,
-.app-panel > * > fieldset {
-  margin: 0 0 14px;
-  padding: 16px 18px 4px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  box-shadow: var(--shadow-sm);
+/* ---------- Products header (Jay-C's lobby hero, in one row) ---------- */
+
+.products-hero {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 22px;
 }
 
-.app-panel fieldset > h3 {
-  margin: 0 0 14px;
-  font-size: 15px;
-  font-weight: 700;
-  text-transform: none;
-  letter-spacing: -0.01em;
-  color: var(--text);
+/* The thin-line wolf, big enough here for the original drawing (no filled head). */
+.products-hero-mark {
+  width: 76px;
+  height: 76px;
+}
+
+.products-hero-mark::before {
+  content: none;
+}
+
+.products-hero-mark::after {
+  mask-image: url('../assets/brand/wolf-lineart.png');
+}
+
+.products-hero-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.products-hero h1 {
+  margin: 0;
+  font-size: clamp(22px, 2.6vw, 30px);
+  font-weight: 750;
+  line-height: 1.15;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.products-hero-text p {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+}
+
+.products-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 @media (max-width: 600px) {
-  .app-body {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto minmax(0, 1fr);
+  .products-hero {
+    flex-wrap: wrap;
   }
 
-  .app-nav {
-    flex-direction: row;
-    overflow-x: auto;
-    scrollbar-width: thin;
-    border-right: 0;
-    border-bottom: 1px solid var(--border);
+  .products-hero-mark {
+    display: none;
   }
 
-  .app-nav [role='tab'] {
-    white-space: nowrap;
+  .products-hero-text {
+    flex-basis: 100%;
   }
-}
 
-/* ---------- Jay-H shell ---------- */
-
-/* The nav and panels fill the window under the top bar. */
-.app-body {
-  border-top: 0;
-}
-
-.app-panel h1 {
-  margin: 0 0 14px;
-  font-size: 22px;
-}
-
-.placeholder-card {
-  max-width: 560px;
-  padding: 18px 20px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  box-shadow: var(--shadow-sm);
-}
-
-.placeholder-card > p {
-  margin: 0 0 8px;
-}
-
-.app-panel fieldset {
-  max-width: 560px;
+  .topbar .status-pill {
+    font-size: 0; /* just the dot on a phone-width window */
+    gap: 0;
+  }
 }
 
 /* ---------- Products ---------- */
@@ -639,18 +669,6 @@ fieldset > h3 {
   margin: 0;
 }
 
-.panel-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 14px;
-}
-
-.app-panel .panel-head h1 {
-  margin: 0;
-}
-
 .product-versions {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -670,23 +688,41 @@ fieldset > h3 {
   font-variant-numeric: tabular-nums;
 }
 
+/* In the status pill's look: a dot and a word. */
 .badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   margin-left: auto;
-  padding: 2px 10px;
+  padding: 3px 10px;
+  border: 1px solid var(--border);
   border-radius: 999px;
+  background: var(--surface-2);
   font-size: 12px;
-  font-weight: 700;
-  background: var(--surface-3);
+  font-weight: 600;
   color: var(--text-muted);
 }
 
+.badge::before {
+  content: '';
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+
 .badge[data-status='update'] {
-  background: var(--accent-soft);
   color: var(--accent-text, var(--accent));
 }
 
-.badge[data-status='up-to-date'] {
-  color: var(--success);
+.badge[data-status='update']::before {
+  background: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.badge[data-status='up-to-date']::before {
+  background: var(--success);
 }
 
 .product-progress {
