@@ -590,9 +590,9 @@ fieldset > h3 {
 
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  /* auto-fit: the cards stretch to the window's edge, however many there are. */
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 14px;
-  max-width: 880px;
 }
 
 .product-card {
@@ -614,6 +614,8 @@ fieldset > h3 {
 
 .product-head h2 {
   margin: 0;
+  /* The badge beside it wraps instead ("Jay-" / "C" otherwise). */
+  white-space: nowrap;
   font-size: 18px;
 }
 
@@ -642,7 +644,6 @@ fieldset > h3 {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  max-width: 880px;
   margin-bottom: 14px;
 }
 
