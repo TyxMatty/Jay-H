@@ -1,5 +1,6 @@
 import { settings } from '../store/settings.js';
 import { resolveStyle } from '../core/style.js';
+import { updateWindowIcon } from './window-icon.js';
 
 const darkQuery = matchMedia('(prefers-color-scheme: dark)');
 const isTauri = '__TAURI_INTERNALS__' in window;
@@ -23,7 +24,10 @@ function applyTheme() {
   }
 }
 
-const applyStyle = () => (document.documentElement.dataset.style = resolveStyle(settings.get().style));
+function applyStyle() {
+  document.documentElement.dataset.style = resolveStyle(settings.get().style);
+  updateWindowIcon();
+}
 
 export function initTheme() {
   document.documentElement.dataset.theme = ''; // force the first applyTheme() to sync the title bar

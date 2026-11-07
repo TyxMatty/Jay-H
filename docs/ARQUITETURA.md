@@ -36,6 +36,8 @@ flowchart LR
 | Shell e UI | **Tauri v2 + Vanilla JS + Vite**, como Jay-C e Jay-A | Mesmo stack, mesma estética. Copiados do Jay-A: `styles/theme.css` (Calmo/Neon/Suave), o começo do `app.css`, `ui/dom.js`, `ui/tabs.js`, `ui/theme.js`, `core/i18n.js`, `core/style.js`, a fonte Inter e o lobo. |
 | Ícones | Os do Jay-C, como o Jay-A | Trocar depois é um `npx tauri icon <png>`. |
 | Bandeja | **Não** | O hub não roda nada em segundo plano: fechar a janela fecha o app. |
+| Ícone da janela | O lobo nas cores do estilo, como no Jay-C (`ui/window-icon.js` + `src-tauri/src/taskbar_icon.rs`) | O `setIcon` do Tauri só troca o ícone pequeno; o da barra de tarefas precisa do `ICON_BIG` e, no app instalado, de um AppUserModelID próprio. Medido: os dois ícones mudam para a cor de cada estilo. |
+| Menu e atalhos do navegador | Desligados no release, direto no WebView2 (`main.rs`: menus padrão e `AreBrowserAcceleratorKeysEnabled`) | É um app, não um navegador: nada de "Recarregar", F5, Ctrl+P, Ctrl+F, F12. O config do Tauri não tem essa opção. No dev ficam ligados. Medido: F5 enviado ao WebView recarrega o dev e não o release; o clique direito abre menu no dev e não no release. |
 | Instância única | `tauri-plugin-single-instance` | Abrir de novo mostra a janela que já está aberta. |
 | Releases | API pública do GitHub, sem token | 60 pedidos por hora por IP bastam para um hub que consulta ao abrir e quando pedem. |
 | Download e execução | No Rust | A página não pode gravar arquivo nem rodar programa; o Rust confere o SHA-256 antes de rodar. |

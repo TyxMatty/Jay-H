@@ -4,6 +4,8 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod products;
+#[cfg(windows)]
+mod taskbar_icon;
 
 use tauri::Manager;
 
@@ -18,7 +20,32 @@ fn main() {
             }
         }))
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![products::installed_app, products::open_app, products::install_app])
+        .invoke_handler(tauri::generate_handler![
+            products::installed_app,
+            products::open_app,
+            products::install_app,
+            #[cfg(windows)]
+            taskbar_icon::set_taskbar_icon
+        ])
+        .setup(|_app| {
+            // An app, not a browser: no right-click menu and no browser shortcuts (F5, Ctrl+R, Ctrl+P,
+            // Ctrl+F, F12, Alt+Left…), which Tauri's config doesn't expose. Dev builds keep them, for
+            // Inspect and reload.
+            #[cfg(all(windows, not(debug_assertions)))]
+            if let Some(window) = _app.get_webview_window("main") {
+                window.with_webview(|webview| unsafe {
+                    use webview2_com::Microsoft::Web::WebView2::Win32::ICoreWebView2Settings3;
+                    use windows::core::Interface;
+                    if let Ok(settings) = webview.controller().CoreWebView2().and_then(|w| w.Settings()) {
+                        let _ = settings.SetAreDefaultContextMenusEnabled(false);
+                        if let Ok(settings) = settings.cast::<ICoreWebView2Settings3>() {
+                            let _ = settings.SetAreBrowserAcceleratorKeysEnabled(false);
+                        }
+                    }
+                })?;
+            }
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running Jay-H");
 }

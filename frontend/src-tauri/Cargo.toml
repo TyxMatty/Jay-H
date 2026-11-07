@@ -21,6 +21,17 @@ ureq = { version = "3", features = ["json"] }
 
 [target.'cfg(windows)'.dependencies]
 winreg = "0.56"
+# The same versions Tauri uses: the taskbar icon (taskbar_icon.rs) and the WebView2 settings (main.rs).
+webview2-com = "0.39"
+windows = { version = "0.62", features = [
+    "Win32_Foundation",
+    "Win32_Storage_EnhancedStorage",
+    "Win32_System_Com",
+    "Win32_System_Com_StructuredStorage",
+    "Win32_System_Variant",
+    "Win32_UI_Shell_PropertiesSystem",
+    "Win32_UI_WindowsAndMessaging",
+] }
 
 [profile.release]
 # Smaller, leaner binaries (same as Jay-C).

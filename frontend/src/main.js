@@ -7,9 +7,4 @@ setLanguage(resolveLanguage(settings.get().language));
 initTheme();
 mountApp(document.getElementById('app'));
 
-// No browser menu (Back, Reload, Print, Inspect…) outside text fields. Dev builds keep it, for Inspect.
-if (!import.meta.env.DEV) {
-  document.addEventListener('contextmenu', (e) => {
-    if (!e.target.closest?.('input, textarea, [contenteditable="true"]')) e.preventDefault();
-  });
-}
+// The right-click menu and the browser shortcuts are off in release builds, natively (src-tauri/src/main.rs).
