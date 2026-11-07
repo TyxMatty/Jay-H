@@ -1,6 +1,6 @@
 [package]
 name = "jay-h"
-version = "0.1.0"
+version = "0.1.1"
 description = "Jay-H — the hub of the Jay line"
 authors = ["TyxMatty"]
 license = "MIT"
