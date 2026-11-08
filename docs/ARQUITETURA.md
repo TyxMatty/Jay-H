@@ -1,5 +1,7 @@
 # Jay-H — Arquitetura
 
+**Português** · [English](ARQUITETURA.en.md)
+
 O hub da linha Jay: um app só que reúne todos os produtos Jay (hoje o **Jay-C**, o **Jay-A**, o **Jay-E** e o próprio Jay-H), mostra a versão instalada e a mais nova de cada um, instala, atualiza e abre. Windows primeiro, como os outros.
 
 Escrito em 2026-11-06, a partir do Jay-A 0.1.0 e do Jay-C 0.4.0. Licença: **MIT**, como a linha toda.
@@ -33,7 +35,7 @@ flowchart LR
 
 | Tema | Escolha | Motivo |
 |---|---|---|
-| Shell e UI | **Tauri v2 + Vanilla JS + Vite**, como Jay-C e Jay-A | Mesmo stack, mesma estética. Copiados do Jay-A: `styles/theme.css` (Calmo/Neon/Suave), o começo do `app.css`, `ui/dom.js`, `ui/tabs.js`, `ui/theme.js`, `core/i18n.js`, `core/style.js`, a fonte Inter e o lobo. |
+| Shell e UI | **Tauri v2 + Vanilla JS + Vite**, como Jay-C e Jay-A | Mesmo stack, mesma estética. Copiados do Jay-A: `styles/theme.css` (Calmo/Neon/Suave), o começo do `app.css`, `ui/dom.js`, `ui/theme.js`, `core/i18n.js`, `core/style.js`, a fonte Inter e o lobo. |
 | Ícones | Os do Jay-C, como o Jay-A | Trocar depois é um `npx tauri icon <png>`. |
 | Bandeja | **Não** | O hub não roda nada em segundo plano: fechar a janela fecha o app. |
 | Ícone da janela | O lobo nas cores do estilo, como no Jay-C (`ui/window-icon.js` + `src-tauri/src/taskbar_icon.rs`) | O `setIcon` do Tauri só troca o ícone pequeno; o da barra de tarefas precisa do `ICON_BIG` e, no app instalado, de um AppUserModelID próprio. Medido: os dois ícones mudam para a cor de cada estilo. |
@@ -59,4 +61,4 @@ Fora do escopo por enquanto (o usuário escolheu só o launcher): painel de repo
 | 0 | Scaffold: janela, estilos, tema, idioma, instância única, catálogo com os cards (nome, descrição, link do repositório) | `npm run web` mostra os cards nos 3 estilos; `npm test` passa ✅ |
 | 1 | Versões: instalada (registro) e mais nova (GitHub); status "Não instalado", "Atualizado", "Atualização: x.y.z", "Sem release ainda"; botão "Verificar de novo" | o card do Jay-C mostra 0.2.4 → 0.4.0 ✅ (medido no app de dev) |
 | 2 | Instalar, atualizar e abrir: download com progresso, SHA-256, roda o instalador, depois relê a versão; botão "Abrir" | ✅ download e SHA-256 do instalador real do Jay-C 0.4.0 (`cargo test -- --ignored`), botões e erros no app de dev. **Falta:** rodar o instalador de verdade, numa conta de teste do Windows (não no Jay-C do usuário) |
-| 3 | Instalador do próprio Jay-H (NSIS, inglês e português) e o Jay-H no próprio catálogo, para se atualizar | ✅ `npm run build` gera o instalador; o card do Jay-H mostra a versão em uso; release [v0.1.0](https://github.com/TyxMatty/Jay-H/releases/tag/v0.1.0) publicada com o instalador da CI, e o hub a acha (0.1.0, SHA-256 conferido, "Atualizado"). **Falta:** testar instalar e se atualizar numa conta de teste do Windows |
+| 3 | Instalador do próprio Jay-H (NSIS, inglês e português) e o Jay-H no próprio catálogo, para se atualizar | ✅ `npm run build` gera o instalador; o card do Jay-H mostra a versão em uso; release [v0.1.0](https://github.com/TyxMatty/Jay-H/releases/tag/v0.1.0) publicada com o instalador da CI, e o hub a acha (0.1.0, SHA-256 conferido, "Atualizado"). O usuário instalou e se atualizou pelo card no PC dele (0.1.0 → 0.1.1 → 0.1.2) ✅ |

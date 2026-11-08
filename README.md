@@ -33,7 +33,7 @@ The Windows installer is in the **[releases](https://github.com/TyxMatty/Jay-H/r
 | [`frontend/`](frontend/) | Tauri v2 + vanilla JS app (Vite) |
 | [`frontend/src/core/products.json`](frontend/src/core/products.json) | The catalog: a new Jay app is a new entry here |
 | [`frontend/src-tauri/`](frontend/src-tauri/) | The Rust side: installed versions (Windows registry), download, SHA-256 and installer, taskbar icon |
-| [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md) | Architecture, technical decisions, stages and how to release a version (in Portuguese) |
+| [`docs/ARQUITETURA.en.md`](docs/ARQUITETURA.en.md) | Architecture, technical decisions, stages and how to release a version |
 | [`.github/workflows/`](.github/workflows/) | CI: tests on every push, and the installer on a version tag |
 
 ## Running the app
