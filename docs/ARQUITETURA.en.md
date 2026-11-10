@@ -2,7 +2,7 @@
 
 [Português](ARQUITETURA.md) · **English**
 
-The hub of the Jay line: one app that gathers every Jay product (today **Jay-C**, **Jay-A**, **Jay-E** and Jay-H itself), shows the installed and the latest version of each one, and installs, updates and opens them. Windows first, like the others.
+The hub of the Jay line: one app that gathers every Jay product (today **Jay-C**, **Jay-A**, **Jay-E**, **Jay-S** and Jay-H itself), shows the installed and the latest version of each one, and installs, updates and opens them. Windows first, like the others.
 
 Written on 2026-11-06, starting from Jay-A 0.1.0 and Jay-C 0.4.0. License: **MIT**, like the whole line.
 

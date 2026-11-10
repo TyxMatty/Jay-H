@@ -12,6 +12,8 @@ export default {
     "Áudio: filtros do microfone pro Jay-C, soundboard, editor e conversão de formatos.",
   "Documents, images and video: read, edit and convert PDF, DOCX, LaTeX, Markdown and more.":
     "Documentos, imagens e vídeo: leia, edite e converta PDF, DOCX, LaTeX, Markdown e mais.",
+  "Study: exams, mock tests and flashcards made from your material by Jay-AI, a model that runs on your computer.":
+    "Estudos: provas, simulados e flashcards feitos do seu material pelo Jay-AI, um modelo que roda no seu computador.",
   "This hub: it updates itself like the other apps.": "Este hub: ele se atualiza como os outros apps.",
   "Installed": "Instalado",
   "Latest": "Mais nova",

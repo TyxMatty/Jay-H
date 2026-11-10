@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/TyxMatty/Jay-H/actions/workflows/ci.yml/badge.svg)](https://github.com/TyxMatty/Jay-H/actions/workflows/ci.yml)
 
-The hub of the Jay line: one light, open-source app that gathers every Jay app ([Jay-C](https://github.com/TyxMatty/Jay-C), [Jay-A](https://github.com/TyxMatty/Jay-A), [Jay-E](https://github.com/TyxMatty/Jay-E)) in one place, to install, update and open them.
+The hub of the Jay line: one light, open-source app that gathers every Jay app ([Jay-C](https://github.com/TyxMatty/Jay-C), [Jay-A](https://github.com/TyxMatty/Jay-A), [Jay-E](https://github.com/TyxMatty/Jay-E), [Jay-S](https://github.com/TyxMatty/Jay-S)) in one place, to install, update and open them.
 
 <p align="center"><img src="docs/images/products-calm.png" alt="Jay-H's Products tab: a card per Jay app with its installed version, the latest one and the Update, Open and Repository buttons" width="820"></p>
 
