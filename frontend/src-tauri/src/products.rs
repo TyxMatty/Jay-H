@@ -1,18 +1,16 @@
 //! The Jay apps: installed version, install/update and open (docs/ARQUITETURA.md, sections 1 and 3).
 //! The page only names a product by its id; URLs and paths come from the catalog and the registry.
+//! Release lookup, installer checks, download and registry reading live in the shared `jay-i` crate.
 
+use jay_i::Mode;
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
-use std::io::{self, Read, Write};
+use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::time::{SystemTime, UNIX_EPOCH};
-use std::fs;
 use tauri::ipc::Channel;
 
-/// No Jay installer comes near this (Jay-C 0.4.0: 2.3 MB; Jay-A plans up to 20 MB).
-const MAX_INSTALLER: u64 = 200 * 1024 * 1024;
+const AGENT: &str = concat!("Jay-H/", env!("CARGO_PKG_VERSION"));
 
 /// Jay-H's own id in the catalog (core/products.js, SELF_ID).
 const SELF_ID: &str = "jay-h";
@@ -34,45 +32,22 @@ fn product(id: &str) -> Result<Product, String> {
     catalog().into_iter().find(|p| p.id == id).ok_or_else(|| format!("unknown product: {id}"))
 }
 
-/// An app installed by its NSIS installer.
+/// An installed app, as the page gets it (jay_i::Installed isn't Serialize).
 #[derive(Serialize)]
 pub struct Installed {
     version: String,
     location: String,
 }
 
-/// Version and folder of the installed product, or None.
-// shortcut: only per-user installs (HKCU), which is how the Jay installers install; add HKLM if one
-// ever installs per machine.
-fn installed(name: &str) -> Result<Option<Installed>, String> {
-    #[cfg(windows)]
-    {
-        use winreg::{RegKey, enums::HKEY_CURRENT_USER};
-        let path = format!(r"Software\Microsoft\Windows\CurrentVersion\Uninstall\{name}");
-        let Ok(key) = RegKey::predef(HKEY_CURRENT_USER).open_subkey(path) else {
-            return Ok(None);
-        };
-        let version: String = key.get_value("DisplayVersion").map_err(|e| e.to_string())?;
-        let location: String = key.get_value("InstallLocation").unwrap_or_default();
-        // NSIS stores the folder in quotes.
-        Ok(Some(Installed { version, location: location.trim_matches('"').to_owned() }))
-    }
-    #[cfg(not(windows))]
-    {
-        let _ = name;
-        Ok(None)
-    }
-}
-
 #[tauri::command]
 pub fn installed_app(id: String) -> Result<Option<Installed>, String> {
-    installed(&product(&id)?.name)
+    Ok(jay_i::installed(&product(&id)?.name)?.map(|i| Installed { version: i.version, location: i.location }))
 }
 
 #[tauri::command]
 pub fn open_app(id: String) -> Result<(), String> {
     let product = product(&id)?;
-    let app = installed(&product.name)?.ok_or_else(|| format!("{} isn't installed", product.name))?;
+    let app = jay_i::installed(&product.name)?.ok_or_else(|| format!("{} isn't installed", product.name))?;
     Command::new(Path::new(&app.location).join(&product.exe))
         .current_dir(&app.location)
         .spawn()
@@ -80,105 +55,51 @@ pub fn open_app(id: String) -> Result<(), String> {
         .map_err(|e| e.to_string())
 }
 
-#[derive(Deserialize)]
-struct Release {
-    assets: Vec<Asset>,
+/// The latest release as the page needs it.
+#[derive(Serialize)]
+pub struct Latest {
+    version: String,
+    /// Rust would accept this release's installer (so the page may offer Install).
+    installer: bool,
 }
 
-#[derive(Deserialize)]
-struct Asset {
-    name: String,
-    size: u64,
-    browser_download_url: String,
-    digest: Option<String>,
-}
-
-/// The release's x64 installer and its SHA-256, after the checks of docs/ARQUITETURA.md, section 3.
-fn pick_installer(release: Release, repo: &str) -> Result<(Asset, String), String> {
-    let asset = release
-        .assets
-        .into_iter()
-        .find(|a| a.name.ends_with("_x64-setup.exe"))
-        .ok_or("the latest release has no Windows installer")?;
-    if !asset.browser_download_url.starts_with(&format!("https://github.com/{repo}/releases/download/")) {
-        return Err(format!("unexpected download address: {}", asset.browser_download_url));
+fn latest_of(repo: &str, release: &jay_i::Release) -> Latest {
+    Latest {
+        version: release.tag_name.trim_start_matches(['v', 'V']).to_owned(),
+        installer: jay_i::pick_installer(repo, release).is_ok(),
     }
-    if asset.name.contains(['/', '\\', ':']) || asset.size > MAX_INSTALLER {
-        return Err(format!("unexpected installer: {} ({} bytes)", asset.name, asset.size));
-    }
-    let sha256 = asset
-        .digest
-        .as_deref()
-        .and_then(|d| d.strip_prefix("sha256:"))
-        .filter(|h| h.len() == 64 && h.bytes().all(|b| b.is_ascii_hexdigit()))
-        .ok_or("the installer has no SHA-256 on GitHub, so it can't be checked")?
-        .to_ascii_lowercase();
-    Ok((asset, sha256))
 }
 
-/// Copies `from` into `to` and returns its SHA-256 (lowercase hex) and length. Fails past `limit` bytes.
-fn copy_hashed(mut from: impl Read, mut to: impl Write, limit: u64, mut progress: impl FnMut(u64)) -> io::Result<(String, u64)> {
-    let mut hasher = Sha256::new();
-    let mut buf = [0u8; 64 * 1024];
-    let mut total = 0u64;
-    loop {
-        let n = from.read(&mut buf)?;
-        if n == 0 {
-            break;
-        }
-        total += n as u64;
-        if total > limit {
-            return Err(io::Error::other("the download is bigger than GitHub said"));
-        }
-        hasher.update(&buf[..n]);
-        to.write_all(&buf[..n])?;
-        progress(total);
-    }
-    to.flush()?;
-    Ok((hasher.finalize().iter().map(|b| format!("{b:02x}")).collect(), total))
+/// The latest GitHub release of the product, or None when it has none yet.
+#[tauri::command]
+pub async fn latest_release(id: String) -> Result<Option<Latest>, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let product = product(&id)?;
+        Ok(jay_i::latest(&product.repo, AGENT)?.map(|release| latest_of(&product.repo, &release)))
+    })
+    .await
+    .map_err(|e| e.to_string())?
 }
 
-fn get(url: &str) -> Result<ureq::http::Response<ureq::Body>, String> {
-    // GitHub's API refuses requests without a User-Agent.
-    ureq::get(url).header("User-Agent", "Jay-H").call().map_err(|e| e.to_string())
+/// Downloads the product's latest installer (SHA-256 checked) into a new temporary folder.
+fn download(product: &Product, progress: impl FnMut(u64, u64)) -> Result<PathBuf, String> {
+    let release = jay_i::latest(&product.repo, AGENT)?.ok_or("no release yet")?;
+    let installer = jay_i::pick_installer(&product.repo, &release)?;
+    jay_i::download(&installer, AGENT, progress)
 }
 
-/// Downloads the latest installer of `product` into a new temporary folder and checks its SHA-256.
-/// On any failure the folder is removed.
-fn download_installer(product: &Product, mut progress: impl FnMut(u64, u64)) -> Result<PathBuf, String> {
-    let release: Release = get(&format!("https://api.github.com/repos/{}/releases/latest", product.repo))?
-        .body_mut()
-        .read_json()
-        .map_err(|e| e.to_string())?;
-    let (asset, sha256) = pick_installer(release, &product.repo)?;
-
-    let nanos = SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |d| d.as_nanos());
-    let dir = std::env::temp_dir().join(format!("jay-h-{}-{nanos}", std::process::id()));
-    fs::create_dir(&dir).map_err(|e| e.to_string())?;
-    let path = dir.join(&asset.name);
-    let result = (|| {
-        let mut response = get(&asset.browser_download_url)?;
-        // ureq stops bodies at 10 MB by default.
-        let body = response.body_mut().with_config().limit(asset.size + 1).reader();
-        let file = fs::File::create(&path).map_err(|e| e.to_string())?;
-        let (got, len) = copy_hashed(body, file, asset.size, |done| progress(done, asset.size)).map_err(|e| e.to_string())?;
-        if len != asset.size || got != sha256 {
-            return Err(format!("{} doesn't match GitHub's SHA-256; it was not run", asset.name));
-        }
-        Ok(path)
-    })();
-    if result.is_err() {
-        let _ = fs::remove_dir_all(&dir);
-    }
-    result
+/// Not installed: the installer's own window. Installed (or Jay-H itself): the passive update, which
+/// only shows progress; Jay-H opens itself again at the end.
+fn mode_for(is_self: bool, installed: bool) -> Mode {
+    if is_self || installed { Mode::Update { relaunch: is_self } } else { Mode::Interactive }
 }
 
 #[derive(Clone, Serialize)]
 #[serde(tag = "stage", rename_all = "camelCase")]
 pub enum Progress {
     Download { done: u64, total: u64 },
-    /// The installer's window is open; the user finishes there.
-    Installer,
+    /// The installer runs: in its own window (`update` false, the user finishes there) or passively.
+    Installer { update: bool },
 }
 
 static BUSY: AtomicBool = AtomicBool::new(false);
@@ -199,7 +120,8 @@ impl Drop for Busy {
 }
 
 /// Downloads, checks and runs the latest installer of the product. Returns the installer's exit code
-/// (0 = installed; NSIS uses 1 for cancelled).
+/// (0 = installed; 1 = cancelled, in the Jay-I setup and in NSIS; the setup returns 2 when it couldn't
+/// run its installer).
 #[tauri::command]
 pub async fn install_app(app: tauri::AppHandle, id: String, on_progress: Channel<Progress>) -> Result<i32, String> {
     let busy = Busy::take()?;
@@ -207,7 +129,7 @@ pub async fn install_app(app: tauri::AppHandle, id: String, on_progress: Channel
         let _busy = busy;
         let product = product(&id)?;
         let mut last = u64::MAX;
-        let path = download_installer(&product, |done, total| {
+        let path = download(&product, |done, total| {
             // One message per percent is plenty.
             let percent = done * 100 / total.max(1);
             if percent != last {
@@ -215,16 +137,18 @@ pub async fn install_app(app: tauri::AppHandle, id: String, on_progress: Channel
                 let _ = on_progress.send(Progress::Download { done, total });
             }
         })?;
-        let _ = on_progress.send(Progress::Installer);
+        let is_self = product.id == SELF_ID;
+        let mode = mode_for(is_self, is_self || jay_i::installed(&product.name)?.is_some());
+        let _ = on_progress.send(Progress::Installer { update: matches!(mode, Mode::Update { .. }) });
         // Jay-H can't wait for its own installer, which has to replace the running jay-h.exe.
-        if product.id == SELF_ID {
+        if is_self {
             // shortcut: the temp folder stays (the installer runs from it); Windows' temp cleanup takes
             // it. Delete it on the next start if it ever piles up.
-            Command::new(&path).spawn().map_err(|e| e.to_string())?;
+            jay_i::run(&path, mode).spawn().map_err(|e| e.to_string())?;
             app.exit(0);
             return Ok(0);
         }
-        let status = Command::new(&path).status();
+        let status = jay_i::run(&path, mode).status();
         if let Some(dir) = path.parent() {
             let _ = fs::remove_dir_all(dir);
         }
@@ -238,9 +162,15 @@ pub async fn install_app(app: tauri::AppHandle, id: String, on_progress: Channel
 mod tests {
     use super::*;
 
-    fn jay_c_release(url: &str, digest: Option<&str>) -> Release {
-        Release {
-            assets: vec![Asset {
+    const REPO: &str = "TyxMatty/Jay-C";
+    const URL: &str = "https://github.com/TyxMatty/Jay-C/releases/download/v0.4.0/Jay-C_0.4.0_x64-setup.exe";
+    const DIGEST: &str = "sha256:848005e8a2f42200b36f5553fd144a9d8aefdcbddbbf1ad49b56c65f473d63de";
+
+    fn release(url: &str, digest: Option<&str>) -> jay_i::Release {
+        jay_i::Release {
+            tag_name: "v0.4.0".into(),
+            html_url: "https://github.com/TyxMatty/Jay-C/releases/tag/v0.4.0".into(),
+            assets: vec![jay_i::ReleaseAsset {
                 name: "Jay-C_0.4.0_x64-setup.exe".into(),
                 size: 2302415,
                 browser_download_url: url.into(),
@@ -248,9 +178,6 @@ mod tests {
             }],
         }
     }
-
-    const URL: &str = "https://github.com/TyxMatty/Jay-C/releases/download/v0.4.0/Jay-C_0.4.0_x64-setup.exe";
-    const DIGEST: &str = "sha256:848005e8a2f42200b36f5553fd144a9d8aefdcbddbbf1ad49b56c65f473d63de";
 
     #[test]
     fn catalog_is_valid() {
@@ -267,26 +194,24 @@ mod tests {
     }
 
     #[test]
-    fn pick_installer_checks_address_and_digest() {
-        let (asset, sha) = pick_installer(jay_c_release(URL, Some(DIGEST)), "TyxMatty/Jay-C").unwrap();
-        assert_eq!(asset.name, "Jay-C_0.4.0_x64-setup.exe");
-        assert_eq!(sha, &DIGEST[7..]);
-        // Another repository's file, no digest, a malformed digest.
-        assert!(pick_installer(jay_c_release(URL, Some(DIGEST)), "TyxMatty/Jay-A").is_err());
-        assert!(pick_installer(jay_c_release("https://example.com/TyxMatty/Jay-C/releases/download/x.exe", Some(DIGEST)), "TyxMatty/Jay-C").is_err());
-        assert!(pick_installer(jay_c_release(URL, None), "TyxMatty/Jay-C").is_err());
-        assert!(pick_installer(jay_c_release(URL, Some("sha256:abc")), "TyxMatty/Jay-C").is_err());
-        assert!(pick_installer(Release { assets: vec![] }, "TyxMatty/Jay-C").is_err());
+    fn latest_of_offers_install_only_for_a_checkable_installer() {
+        let good = latest_of(REPO, &release(URL, Some(DIGEST)));
+        assert_eq!((good.version.as_str(), good.installer), ("0.4.0", true));
+        // No digest, another repository's address, no assets.
+        assert!(!latest_of(REPO, &release(URL, None)).installer);
+        assert!(!latest_of("TyxMatty/Jay-A", &release(URL, Some(DIGEST))).installer);
+        assert!(!latest_of(REPO, &jay_i::Release { assets: vec![], ..release(URL, Some(DIGEST)) }).installer);
     }
 
     #[test]
-    fn copy_hashed_hashes_and_limits() {
-        let mut out = Vec::new();
-        let mut seen = 0;
-        let (sha, len) = copy_hashed(&b"abc"[..], &mut out, 3, |n| seen = n).unwrap();
-        assert_eq!(sha, "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
-        assert_eq!((len, seen, out.as_slice()), (3, 3, &b"abc"[..]));
-        assert!(copy_hashed(&b"abcd"[..], Vec::new(), 3, |_| {}).is_err());
+    fn mode_depends_on_install_state() {
+        let args = |is_self, installed| {
+            jay_i::run(Path::new("x.exe"), mode_for(is_self, installed)).get_args().map(|a| a.to_string_lossy().into_owned()).collect::<Vec<_>>()
+        };
+        assert!(args(false, false).is_empty());
+        assert_eq!(args(false, true), ["/P", "/UPDATE"]);
+        assert_eq!(args(true, true), ["/P", "/UPDATE", "/R"]);
+        assert_eq!(args(true, false), ["/P", "/UPDATE", "/R"]);
     }
 
     /// The real thing, without running it: `cargo test -- --ignored` (downloads Jay-C's installer).
@@ -294,7 +219,7 @@ mod tests {
     #[ignore]
     fn downloads_and_checks_jay_c() {
         let mut calls = 0;
-        let path = download_installer(&product("jay-c").unwrap(), |_, _| calls += 1).unwrap();
+        let path = download(&product("jay-c").unwrap(), |_, _| calls += 1).unwrap();
         let size = fs::metadata(&path).unwrap().len();
         fs::remove_dir_all(path.parent().unwrap()).unwrap();
         assert!(size > 1_000_000 && calls > 0, "{size} bytes, {calls} progress calls");

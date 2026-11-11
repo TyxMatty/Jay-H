@@ -1,5 +1,5 @@
-// Versions of the Jay apps: the latest release on GitHub and how it compares with the installed one
-// (docs/ARQUITETURA.md, section 1).
+// Versions of the Jay apps: how the latest release compares with the installed one
+// (docs/ARQUITETURA.md, section 1). The latest release itself comes from Rust (products.rs, latest_release).
 
 /** "v0.4.0" → [0, 4, 0]. A pre-release or build suffix ("-beta", "+1") is ignored. */
 const parts = (version) =>
@@ -28,25 +28,4 @@ export function productStatus(installed, latest) {
   if (!latest) return 'no-release';
   if (!installed) return 'not-installed';
   return compareVersions(installed.version, latest.version) < 0 ? 'update' : 'up-to-date';
-}
-
-/**
- * The parts of a GitHub release the hub uses: its version and the Windows installer
- * (`<Product>_<version>_x64-setup.exe`, with the SHA-256 GitHub computes as `digest`).
- */
-export function parseRelease(release) {
-  const asset = release.assets?.find((a) => /_x64-setup\.exe$/i.test(a.name));
-  return {
-    version: release.tag_name.replace(/^v/i, ''),
-    url: release.html_url,
-    installer: asset ? { name: asset.name, size: asset.size, url: asset.browser_download_url, sha256: asset.digest?.replace(/^sha256:/, '') ?? null } : null,
-  };
-}
-
-/** The latest release of `repo` ("owner/name"), or null when it has none. Throws on network/API errors. */
-export async function fetchLatestRelease(repo, fetchImpl = fetch) {
-  const response = await fetchImpl(`https://api.github.com/repos/${repo}/releases/latest`, { headers: { Accept: 'application/vnd.github+json' } });
-  if (response.status === 404) return null;
-  if (!response.ok) throw new Error(`GitHub ${response.status}`);
-  return parseRelease(await response.json());
 }

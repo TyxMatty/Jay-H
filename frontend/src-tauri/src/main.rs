@@ -22,6 +22,7 @@ fn main() {
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             products::installed_app,
+            products::latest_release,
             products::open_app,
             products::install_app,
             #[cfg(windows)]

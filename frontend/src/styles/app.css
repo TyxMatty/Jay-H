@@ -496,7 +496,7 @@ fieldset > h3 {
 }
 
 .status-pill[data-state='online']::before,
-.status-pill[data-state='reachable']::before {
+.status-pill[data-state='browser']::before {
   background: var(--success);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--success) 25%, transparent);
 }

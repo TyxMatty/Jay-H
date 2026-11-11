@@ -3,7 +3,7 @@
 import { h } from './dom.js';
 import { icons } from './icons.js';
 import { products, SELF_ID } from '../core/products.js';
-import { fetchLatestRelease, productStatus } from '../core/releases.js';
+import { productStatus } from '../core/releases.js';
 import { t } from '../core/i18n.js';
 
 const isTauri = '__TAURI_INTERNALS__' in window;
@@ -26,6 +26,13 @@ async function readInstalled(id) {
   if (!isTauri) return undefined;
   const { invoke } = await import('@tauri-apps/api/core');
   return invoke('installed_app', { id });
+}
+
+/** { version, installer } or null (no release yet); undefined in the browser. Rust asks GitHub. */
+async function readLatest(id) {
+  if (!isTauri) return undefined;
+  const { invoke } = await import('@tauri-apps/api/core');
+  return invoke('latest_release', { id });
 }
 
 const errorText = (error) => error?.message ?? String(error);
@@ -86,7 +93,12 @@ function productCard(product) {
         bar.value = Math.round((p.done * 100) / p.total);
       } else {
         bar.hidden = true;
-        note.textContent = product.id === SELF_ID ? t('Checked. Jay-H closes so its installer can update it.') : t('Checked. Finish in the installer window.');
+        note.textContent =
+          product.id === SELF_ID
+            ? t('Checked. Jay-H closes, updates and opens again.')
+            : p.update
+              ? t('Checked. Installing the update…')
+              : t('Checked. Finish in the installer window.');
       }
     };
     try {
@@ -108,13 +120,14 @@ function productCard(product) {
     card.setAttribute('aria-busy', 'true');
     installedValue.textContent = latestValue.textContent = '…';
     badge.hidden = error.hidden = installButton.hidden = openButton.hidden = true;
-    const [installed, latest] = await Promise.allSettled([readInstalled(product.id), fetchLatestRelease(product.repo)]);
+    const [installed, latest] = await Promise.allSettled([readInstalled(product.id), readLatest(product.id)]);
 
     if (installed.status === 'rejected') installedValue.textContent = '—';
     else if (installed.value === undefined) installedValue.textContent = t('Only in the app');
     else installedValue.textContent = installed.value?.version ?? t('Not installed');
 
     if (latest.status === 'rejected') latestValue.textContent = '—';
+    else if (latest.value === undefined) latestValue.textContent = t('Only in the app');
     else latestValue.textContent = latest.value?.version ?? t('No release yet');
 
     const problem = installed.reason ?? latest.reason;
@@ -148,7 +161,7 @@ function productCard(product) {
 
 /**
  * The products: a header (Jay-C's lobby hero, smaller) over one card per app.
- * @param {{ onSummary: (s: { state: 'checking' | 'updates' | 'online' | 'reachable' | 'offline', updates: number }) => void }} options
+ * @param {{ onSummary: (s: { state: 'checking' | 'updates' | 'online' | 'browser' | 'offline', updates: number }) => void }} options
  */
 export function createProductsPanel({ onSummary }) {
   const cards = products().map(productCard);
@@ -165,8 +178,8 @@ export function createProductsPanel({ onSummary }) {
     pending = cards.filter((_, i) => statuses[i] === 'update');
     updateAllButton.hidden = pending.length < 2; // one update: its own card's button is enough
     checkButton.disabled = false;
-    // 'unknown' = in a browser, which can't see what's installed: GitHub answered, nothing more to say.
-    const state = statuses.includes('error') ? 'offline' : pending.length ? 'updates' : statuses.includes('unknown') ? 'reachable' : 'online';
+    // 'unknown' = in a browser, which asks nothing (no registry, no GitHub): only the app can check.
+    const state = statuses.includes('error') ? 'offline' : pending.length ? 'updates' : statuses.includes('unknown') ? 'browser' : 'online';
     onSummary({ state, updates: pending.length });
   };
 

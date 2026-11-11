@@ -1788,18 +1788,27 @@ dependencies = [
 
 [[package]]
 name = "jay-h"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
+ "jay-i",
  "serde",
  "serde_json",
- "sha2",
  "tauri",
  "tauri-build",
  "tauri-plugin-opener",
  "tauri-plugin-single-instance",
- "ureq",
  "webview2-com",
  "windows",
+]
+
+[[package]]
+name = "jay-i"
+version = "0.1.0"
+source = "git+https://github.com/TyxMatty/Jay-I?rev=f4f9ef07c0cf49abd1f53d3caa00c69e5aa1c90a#f4f9ef07c0cf49abd1f53d3caa00c69e5aa1c90a"
+dependencies = [
+ "serde",
+ "sha2",
+ "ureq",
  "winreg",
 ]
 

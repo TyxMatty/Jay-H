@@ -131,12 +131,12 @@ function createStatusPill() {
     checking: () => t('Checking…'),
     updates: (n) => (n === 1 ? t('1 update') : t('{n} updates', { n })),
     online: () => t('All up to date'),
-    reachable: () => t('GitHub online'),
+    browser: () => t('Only in the app'),
     offline: () => t("Couldn't reach GitHub"),
   };
   return {
     pill,
-    /** @param {{ state: 'checking' | 'updates' | 'online' | 'reachable' | 'offline', updates: number }} summary */
+    /** @param {{ state: 'checking' | 'updates' | 'online' | 'browser' | 'offline', updates: number }} summary */
     show({ state, updates }) {
       pill.dataset.state = state;
       pill.textContent = TEXT[state](updates);

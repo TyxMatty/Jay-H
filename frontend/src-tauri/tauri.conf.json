@@ -1,7 +1,7 @@
 {
   "$schema": "../../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Jay-H",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "identifier": "io.github.tyxmatty.jayh",
   "build": {
     "frontendDist": "../dist",
@@ -27,7 +27,7 @@
         "script-src": "'self'",
         "style-src": "'self' 'unsafe-inline'",
         "img-src": "'self' data: blob:",
-        "connect-src": "'self' ipc: http://ipc.localhost https://api.github.com",
+        "connect-src": "'self' ipc: http://ipc.localhost",
         "font-src": "'self' data:"
       },
       "dangerousDisableAssetCspModification": [
